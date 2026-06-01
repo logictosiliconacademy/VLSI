@@ -1,0 +1,8 @@
+
+body{background:#0f172a;color:white;font-family:Arial;margin:0;padding:20px}
+nav{display:flex;justify-content:space-between}
+ul{display:flex;gap:20px;list-style:none}
+a{color:white;text-decoration:none}
+.hero{text-align:center;padding:80px}
+.btn{background:#2563eb;padding:12px 24px;border-radius:10px}
+input,button{padding:10px;margin:5px}

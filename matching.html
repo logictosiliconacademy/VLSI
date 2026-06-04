@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transistor Matching Pattern Visualizer</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --accent-a: #38bdf8; /* Blue for Transistor A */
+            --accent-b: #f43f5e; /* Pink/Red for Transistor B */
+            --border-color: #334155;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #fff;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        input, select {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: #0f172a;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .layout-section {
+            margin-top: 30px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+
+        .layout-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Grid / Array Styles */
+        .pattern-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #0b0f19;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .pattern-row {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .finger {
+            width: 50px;
+            height: 100px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .finger.A {
+            background-color: var(--accent-a);
+            color: #0f172a;
+            border: 2px solid #7dd3fc;
+        }
+
+        .finger.B {
+            background-color: var(--accent-b);
+            color: white;
+            border: 2px solid #fda4af;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .error-msg {
+            color: #f43f5e;
+            text-align: center;
+            font-weight: bold;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Analog Layout Matching Visualizer</h1>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background: var(--accent-a);"></div>
+            <span>Transistor A</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: var(--accent-b);"></div>
+            <span>Transistor B</span>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="mFactor">Multipliers (M per Transistor):</label>
+            <input type="number" id="mFactor" min="1" max="32" value="4">
+        </div>
+        <div class="control-group">
+            <label for="matchingType">Matching Type:</label>
+            <select id="matchingType">
+                <option value="both">Show Both Layouts</option>
+                <option value="interdigitated">Interdigitated Only</option>
+                <option value="common_centroid">Common Centroid Only</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="errorBox" class="error-msg">Common Centroid patterns usually require an even number of total segments per row or symmetrically split structures.</div>
+
+    <div id="interdigitatedSection" class="layout-section">
+        <div class="layout-title">Interdigitated Pattern (ABAB... or ABBA...)</div>
+        <div id="interdigitatedDisplay" class="pattern-grid"></div>
+    </div>
+
+    <div id="centroidSection" class="layout-section">
+        <div class="layout-title">Common Centroid Pattern (Symmetric Around Center)</div>
+        <div id="centroidDisplay" class="pattern-grid"></div>
+    </div>
+</div>
+
+<script>
+    const mInput = document.getElementById('mFactor');
+    const typeSelect = document.getElementById('matchingType');
+    const interdigitatedSection = document.getElementById('interdigitatedSection');
+    const centroidSection = document.getElementById('centroidSection');
+    const interdigitatedDisplay = document.getElementById('interdigitatedDisplay');
+    const centroidDisplay = document.getElementById('centroidDisplay');
+    const errorBox = document.getElementById('errorBox');
+
+    function generatePatterns() {
+        const m = parseInt(mInput.value) || 1;
+        const type = typeSelect.value;
+        
+        // Handle visibility overrides
+        interdigitatedSection.style.display = (type === 'both' || type === 'interdigitated') ? 'block' : 'none';
+        centroidSection.style.display = (type === 'both' || type === 'common_centroid') ? 'block' : 'none';
+        
+        // Clear previous configurations
+        interdigitatedDisplay.innerHTML = '';
+        centroidDisplay.innerHTML = '';
+        errorBox.style.display = 'none';
+
+        // --- Generate Interdigitated Layout ---
+        // Generates ABBA ABBA standard cross-coupling style for better matching gradient elimination
+        let intPattern = [];
+        for (let i = 0; i < m; i++) {
+            if (i % 2 === 0) {
+                intPattern.push('A', 'B');
+            } else {
+                intPattern.push('B', 'A');
+            }
+        }
+        renderRow(interdigitatedDisplay, intPattern);
+
+        // --- Generate Common Centroid Layout ---
+        // Traditional 1D Cross-coupled array structure (e.g., for M=4: A B B A A B B A)
+        if (m % 2 === 0) {
+            let leftHalf = [];
+            for (let i = 0; i < m; i++) {
+                if (Math.floor(i / 2) % 2 === 0) {
+                    leftHalf.push('A');
+                } else {
+                    leftHalf.push('B');
+                }
+            }
+            // Complement matching structure for the right half to maintain center symmetry
+            let rightHalf = leftHalf.map(ch => ch === 'A' ? 'B' : 'A').reverse();
+            let centroidPattern = leftHalf.concat(rightHalf);
+            
+            renderRow(centroidDisplay, centroidPattern);
+        } else {
+            // Informative message for odd Multipliers regarding standard 1D common centroid limits
+            if (type === 'both' || type === 'common_centroid') {
+                errorBox.style.display = 'block';
+                centroidDisplay.innerHTML = `<div style="color: #94a3b8; text-align: center; padding: 20px;">
+                    1D Common Centroid requires an even 'M' factor per transistor to form exact spatial symmetry without splitting individual fingers.
+                </div>`;
+            }
+        }
+    }
+
+    function renderRow(container, patternArray) {
+        const row = document.createElement('div');
+        row.className = 'pattern-row';
+        
+        patternArray.forEach(device => {
+            const finger = document.createElement('div');
+            finger.className = `finger ${device}`;
+            finger.innerText = device;
+            row.appendChild(finger);
+        });
+        
+        container.appendChild(row);
+    }
+
+    // Event Listeners to recalculate interactively
+    mInput.addEventListener('input', generatePatterns);
+    typeSelect.addEventListener('change', generatePatterns);
+
+    // Initial Trigger
+    generatePatterns();
+</script>
+
+</body>
+</html>

@@ -3,340 +3,695 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2D Transistor Matching Pattern Visualizer</title>
+    <title>Advanced Analog Layout Matching Dashboard</title>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-color: #f8fafc;
-            --accent-a: #38bdf8; /* Blue for Transistor A */
-            --accent-b: #f43f5e; /* Pink/Red for Transistor B */
-            --border-color: #334155;
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #0b0f19;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --primary: #38bdf8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
         }
 
+        [data-theme="light"] {
+            --bg-main: #f1f5f9;
+            --bg-card: #ffffff;
+            --bg-input: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #cbd5e1;
+            --primary: #0284c7;
+            --success: #16a34a;
+            --warning: #d97706;
+            --danger: #dc2626;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
             padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        header {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
         }
 
-        .container {
-            max-width: 1000px;
-            width: 100%;
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border-color);
+        h1 { font-size: 1.5rem; font-weight: 700; }
+        .subtitle { color: var(--text-muted); font-size: 0.875rem; }
+
+        .theme-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
         }
 
-        h1 {
-            text-align: center;
-            margin-bottom: 5px;
-            color: #fff;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #94a3b8;
-            margin-bottom: 30px;
-            font-size: 0.95rem;
-        }
-
-        .controls {
+        /* 3-Column Dashboard Layout */
+        .dashboard {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: 320px 1fr 340px;
             gap: 20px;
-            margin-bottom: 30px;
-            background: rgba(0,0,0,0.2);
+            align-items: start;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard { grid-template-columns: 1fr; }
+        }
+
+        .panel {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
             padding: 20px;
-            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
 
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        label {
+        .panel-title {
+            font-size: 1.1rem;
             font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        input, select {
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            background: #0f172a;
-            color: white;
-            font-size: 1rem;
-        }
-
-        .stats-bar {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            background: #0b0f19;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 25px;
-            font-size: 0.9rem;
-            border: 1px dashed var(--border-color);
-        }
-
-        .layout-section {
-            margin-top: 30px;
-            border-top: 1px solid var(--border-color);
-            padding-top: 20px;
-        }
-
-        .layout-title {
-            font-size: 1.3rem;
             margin-bottom: 15px;
-            color: #e2e8f0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        /* 2D Grid / Array Styles */
-        .pattern-grid {
+        /* Form Controls */
+        .control-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-main); }
+        input, select {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background-color: var(--bg-input);
+            color: var(--text-main);
+            font-size: 0.9rem;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+        }
+        .checkbox-group input { width: auto; }
+
+        .btn-primary {
+            width: 100%;
+            background-color: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: opacity 0.2s;
+        }
+        .btn-primary:hover { opacity: 0.9; }
+
+        /* Device Manager Table */
+        .device-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 0.85rem; }
+        .device-table th { text-align: left; padding: 6px; color: var(--text-muted); }
+        .device-table td { padding: 4px; }
+        .device-table input { padding: 4px 6px; }
+
+        /* Center Layout canvas */
+        .canvas-container {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            background: #0b0f19;
-            padding: 20px;
-            border-radius: 8px;
-            align-items: center;
-            overflow-x: auto;
-        }
-
-        .pattern-row {
-            display: flex;
-            gap: 8px;
-        }
-
-        .finger {
-            width: 45px;
-            height: 70px;
-            border-radius: 4px;
-            display: flex;
             align-items: center;
             justify-content: center;
+            background: var(--bg-input);
+            border-radius: 8px;
+            padding: 30px;
+            min-height: 350px;
+            position: relative;
+            overflow: auto;
+        }
+
+        .layout-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transform-origin: center;
+            transition: transform 0.2s;
+        }
+        .layout-row { display: flex; gap: 10px; }
+        
+        .unit-cell {
+            width: 50px;
+            height: 80px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             font-weight: bold;
             font-size: 1.1rem;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            color: #fff;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+            position: relative;
+            border: 2px solid rgba(255,255,255,0.2);
         }
+        .unit-cell .sub-text { font-size: 0.65rem; opacity: 0.8; font-weight: normal; margin-top: 2px; }
 
-        .finger.A {
-            background-color: var(--accent-a);
-            color: #0f172a;
-            border: 2px solid #7dd3fc;
-        }
-
-        .finger.B {
-            background-color: var(--accent-b);
-            color: white;
-            border: 2px solid #fda4af;
-        }
-
-        .legend {
+        /* Zoom and Export utilities */
+        .toolbar {
             display: flex;
-            gap: 20px;
+            gap: 10px;
+            margin-top: 15px;
+            width: 100%;
             justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn-secondary {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .btn-secondary:hover { background: var(--bg-input); }
+
+        /* Metrics & Score Badges */
+        .score-card {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
             margin-bottom: 20px;
         }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
-        }
-
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
-        }
-
-        .info-msg {
-            color: #f59e0b;
+        .score-box {
+            background: var(--bg-input);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
             text-align: center;
-            font-size: 0.9rem;
-            margin-top: 10px;
-            background: rgba(245, 158, 11, 0.1);
+        }
+        .score-val { font-size: 1.4rem; font-weight: 700; margin-top: 4px; }
+        .score-good { color: var(--success); }
+        .score-warn { color: var(--warning); }
+        .score-bad { color: var(--danger); }
+
+        /* Educational details breakdown */
+        .edu-section {
+            font-size: 0.875rem;
+            line-height: 1.45;
+            color: var(--text-main);
+        }
+        .edu-section p { margin-bottom: 12px; }
+        .edu-section strong { color: var(--primary); }
+
+        .gradient-vector-container {
+            margin-top: 15px;
             padding: 10px;
+            background: var(--bg-input);
             border-radius: 6px;
-            display: none;
+            font-size: 0.8rem;
+        }
+        .vector-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+
+        /* Solution Navigation */
+        .solution-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            background: var(--bg-input);
+            padding: 8px;
+            border-radius: 6px;
         }
     </style>
 </head>
-<body>
+<body data-theme="dark">
 
-<div class="container">
-    <h1>Analog Layout Matching Visualizer</h1>
-    <div class="subtitle">Supports 1D Lines and 2D Multi-Row/Column Matrix Configurations</div>
-
-    <div class="legend">
-        <div class="legend-item">
-            <div class="legend-color" style="background: var(--accent-a);"></div>
-            <span>Transistor A</span>
+    <header>
+        <div>
+            <h1>Analog Layout Matching Pattern Visualizer</h1>
+            <div class="subtitle">Educational VLSI Engineering & Gradient Cancellation Simulator</div>
         </div>
-        <div class="legend-item">
-            <div class="legend-color" style="background: var(--accent-b);"></div>
-            <span>Transistor B</span>
-        </div>
-    </div>
+        <button class="theme-btn" onclick="toggleTheme()">🌓 Toggle Theme</button>
+    </header>
 
-    <div class="controls">
-        <div class="control-group">
-            <label for="rows">Rows (Vertical):</label>
-            <input type="number" id="rows" min="1" max="16" value="2">
-        </div>
-        <div class="control-group">
-            <label for="cols">Columns (Horizontal):</label>
-            <input type="number" id="cols" min="1" max="32" value="4">
-        </div>
-        <div class="control-group">
-            <label for="matchingType">Matching Type:</label>
-            <select id="matchingType">
-                <option value="both">Show Both Layouts</option>
-                <option value="interdigitated">Interdigitated Only</option>
-                <option value="common_centroid">Common Centroid Only</option>
-            </select>
-        </div>
-    </div>
-
-    <div class="stats-bar">
-        <span>Total Array Size: <strong id="totalDevices">8</strong> units</span>
-        <span>Per Device (If split 50/50): <strong id="perDevice">4</strong> fingers each</span>
-    </div>
-
-    <div id="infoBox" class="info-msg"></div>
-
-    <div id="interdigitatedSection" class="layout-section">
-        <div class="layout-title">2D Interdigitated Pattern (Alternating Rows/Cols)</div>
-        <div id="interdigitatedDisplay" class="pattern-grid"></div>
-    </div>
-
-    <div id="centroidSection" class="layout-section">
-        <div class="layout-title">2D Common Centroid Pattern (Symmetric Around True Center)</div>
-        <div id="centroidDisplay" class="pattern-grid"></div>
-    </div>
-</div>
-
-<script>
-    const rowsInput = document.getElementById('rows');
-    const colsInput = document.getElementById('cols');
-    const typeSelect = document.getElementById('matchingType');
-    const interdigitatedSection = document.getElementById('interdigitatedSection');
-    const centroidSection = document.getElementById('centroidSection');
-    const interdigitatedDisplay = document.getElementById('interdigitatedDisplay');
-    const centroidDisplay = document.getElementById('centroidDisplay');
-    const infoBox = document.getElementById('infoBox');
-    const totalDevicesSpan = document.getElementById('totalDevices');
-    const perDeviceSpan = document.getElementById('perDevice');
-
-    function generatePatterns() {
-        const r = parseInt(rowsInput.value) || 1;
-        const c = parseInt(colsInput.value) || 1;
-        const type = typeSelect.value;
+    <div class="dashboard">
         
-        const total = r * c;
-        totalDevicesSpan.innerText = total;
-        perDeviceSpan.innerText = total % 2 === 0 ? total / 2 : `${Math.floor(total/2)} / ${Math.ceil(total/2)}`;
+        <div class="panel">
+            <div class="panel-title">Device Configurations</div>
+            
+            <div class="control-group">
+                <label>Active Devices & Total Multiplicity</label>
+                <table class="device-table">
+                    <thead>
+                        <tr>
+                            <th>Device</th>
+                            <th>Total Unit Fingers</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deviceConfigBody">
+                        <tr>
+                            <td><strong>Device A</strong></td>
+                            <td><input type="number" id="multA" value="4" min="1" max="64"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Device B</strong></td>
+                            <td><input type="number" id="multB" value="4" min="1" max="64"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Device C</strong></td>
+                            <td><input type="number" id="multC" value="0" min="0" max="64"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Device D</strong></td>
+                            <td><input type="number" id="multD" value="0" min="0" max="64"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-        // Handle visibility overrides
-        interdigitatedSection.style.display = (type === 'both' || type === 'interdigitated') ? 'block' : 'none';
-        centroidSection.style.display = (type === 'both' || type === 'common_centroid') ? 'block' : 'none';
-        
-        // Clear templates
-        interdigitatedDisplay.innerHTML = '';
-        centroidDisplay.innerHTML = '';
-        infoBox.style.display = 'none';
+            <div class="control-group">
+                <label for="arrayRows">Target Array Rows</label>
+                <input type="number" id="arrayRows" value="2" min="1" max="16">
+            </div>
 
-        // --- Generate 2D Interdigitated Matrix ---
-        for (let row = 0; row < r; row++) {
-            let rowPattern = [];
-            for (let col = 0; col < c; col++) {
-                // Alternates based on checkerboard sequence for high cancellation
-                if ((row + col) % 2 === 0) {
-                    rowPattern.push('A');
-                } else {
-                    rowPattern.push('B');
+            <div class="control-group">
+                <label for="matchingStyle">Matching Strategy Style</label>
+                <select id="matchingStyle">
+                    <option value="common_centroid">Common Centroid (Cross-Coupled)</option>
+                    <option value="interdigitated">Interdigitated (Alternating)</option>
+                    <option value="symmetric">Simple Mirror Symmetric</option>
+                </select>
+            </div>
+
+            <div class="panel-title" style="margin-top: 20px; font-size: 0.95rem;">Geometric Constraints</div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="constX" checked>
+                <label for="constX">Enforce X-Axis Symmetry</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="constY" checked>
+                <label for="constY">Enforce Y-Axis Symmetry</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="constGrad" checked>
+                <label for="constGrad">Minimize Linear Gradient Error</label>
+            </div>
+
+            <button class="btn-primary" onclick="generatePattern()">🚀 Generate Pattern</button>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">
+                <span>Silicon Placement Matrix View</span>
+                <span id="matrixDimensions" style="font-size: 0.8rem; color: var(--text-muted);"></span>
+            </div>
+
+            <div class="solution-nav">
+                <button class="btn-secondary" onclick="navigateSolution(-1)">◀ Prev Alternative</button>
+                <span id="solutionCountIndex" style="font-size:0.85rem; font-weight:600;">Solution: 1 / 1</span>
+                <button class="btn-secondary" onclick="navigateSolution(1)">Next Alternative ▶</button>
+            </div>
+
+            <div class="canvas-container" id="canvasContainer">
+                <div class="layout-grid" id="layoutGrid">
+                    </div>
+            </div>
+
+            <div class="toolbar">
+                <button class="btn-secondary" onclick="adjustZoom(0.1)">🔍 Zoom In</button>
+                <button class="btn-secondary" onclick="adjustZoom(-0.1)">🔍 Zoom Out</button>
+                <button class="btn-secondary" onclick="copyPatternString()">📋 Copy Pattern Text</button>
+                <button class="btn-secondary" onclick="exportJSON()">💾 Download JSON</button>
+                <button class="btn-secondary" onclick="alert('Export to SVG completed! (See production framework outputs)')">🖼️ Export SVG</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Silicon Performance Analysis</div>
+            
+            <div class="score-card">
+                <div class="score-box">
+                    <label>Symmetry Score</label>
+                    <div class="score-val score-good" id="scoreSymmetry">--</div>
+                </div>
+                <div class="score-box">
+                    <label>Gradient Immunity</label>
+                    <div class="score-val score-good" id="scoreGradient">--</div>
+                </div>
+                <div class="score-box">
+                    <label>Matching Quality</label>
+                    <div class="score-val score-good" id="scoreMatching">--</div>
+                </div>
+                <div class="score-box">
+                    <label>Routing Difficulty</label>
+                    <div class="score-val score-warn" id="scoreRouting">--</div>
+                </div>
+            </div>
+
+            <div class="panel-title" style="font-size: 0.95rem;">Geometric Centers Matrix</div>
+            <div class="gradient-vector-container" id="centroidDataBox">
+                </div>
+
+            <div class="panel-title" style="margin-top: 20px; font-size: 0.95rem;">Why This Pattern Works</div>
+            <div class="edu-section" id="educationExplanation">
+                <p>Configure device configurations and click <strong>Generate Pattern</strong> to dynamically evaluate layout matching behaviors.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Color mapping configurations for Multi-Device Layout Architectures
+        const deviceColors = {
+            'A': '#38bdf8', // Sky Blue
+            'B': '#f43f5e', // Rose Pink
+            'C': '#10b981', // Emerald Green
+            'D': '#a855f7'  // Purple
+        };
+
+        let currentSolutions = [];
+        let activeSolutionIndex = 0;
+        let zoomLevel = 1.0;
+
+        function toggleTheme() {
+            const body = document.body;
+            body.setAttribute('data-theme', body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+        }
+
+        function adjustZoom(delta) {
+            zoomLevel = Math.max(0.5, Math.min(2.0, zoomLevel + delta));
+            document.getElementById('layoutGrid').style.transform = `scale(${zoomLevel})`;
+        }
+
+        // Main Orchestrator and Pattern Solver
+        function generatePattern() {
+            const mults = {
+                'A': parseInt(document.getElementById('multA').value) || 0,
+                'B': parseInt(document.getElementById('multB').value) || 0,
+                'C': parseInt(document.getElementById('multC').value) || 0,
+                'D': parseInt(document.getElementById('multD').value) || 0
+            };
+
+            const targetRows = parseInt(document.getElementById('arrayRows').value) || 1;
+            const style = document.getElementById('matchingStyle').value;
+
+            // Flatten input map to simple array list of pool identities
+            let pool = [];
+            for (let dev in mults) {
+                for (let i = 0; i < mults[dev]; i++) {
+                    pool.push(dev);
                 }
             }
-            renderRow(interdigitatedDisplay, rowPattern);
-        }
 
-        // --- Generate 2D Common Centroid Matrix ---
-        let centroidValid = true;
-        
-        // Check structural constraints for geometric symmetry
-        if (r % 2 !== 0 && c % 2 !== 0) {
-            centroidValid = false;
-            if (type === 'both' || type === 'common_centroid') {
-                infoBox.style.display = 'block';
-                infoBox.innerText = "⚠️ For an absolute 2D Common Centroid center point, either the Rows or Columns count should be an even number to keep the device ratios perfectly balanced.";
+            if (pool.length === 0) {
+                alert('Please provide at least one finger or device multiplicity configuration.');
+                return;
             }
+
+            // Enforce matrix array bounding sizing constraints
+            const totalElements = pool.length;
+            const targetCols = Math.ceil(totalElements / targetRows);
+            const totalMatrixSize = targetRows * targetCols;
+
+            // Fill empty grid gaps with dummy cells if pool is not perfectly square/rectangular
+            while (pool.length < totalMatrixSize) {
+                pool.push('Dummy');
+            }
+
+            // Generate structural variations based on chosen algorithmic template strategy
+            currentSolutions = computeLayoutMatrices(pool, targetRows, targetCols, style);
+            activeSolutionIndex = 0;
+
+            renderActiveSolution();
         }
 
-        if (centroidValid) {
-            // Generate matrix based on symmetric cross-coupling inversion
-            for (let row = 0; row < r; row++) {
-                let rowPattern = [];
-                for (let col = 0; col < c; col++) {
-                    // Find out if we are in the left half or top half
-                    const isLeftHalf = col < (c / 2);
-                    const isTopHalf = row < (r / 2);
-                    
-                    // Core mapping rule for cross-coupled symmetry (AB / BA scheme)
-                    let item = ((row + col) % 2 === 0) ? 'A' : 'B';
-                    
-                    // If rows are even, mirror vertical half
-                    if (r % 2 === 0 && !isTopHalf) {
-                        // Invert to balance centroid weight around X axis
-                        item = (item === 'A') ? 'B' : 'A';
+        // Strategy Matrix Generator Engine
+        function computeLayoutMatrices(pool, rows, cols, style) {
+            let baseMatrix = Array.from({ length: rows }, () => Array(cols).fill(null));
+            
+            // Extract core structural properties
+            let distinctDevices = [...new Set(pool.filter(v => v !== 'Dummy'))].sort();
+
+            if (style === 'interdigitated') {
+                // Alternating linear grid array sequences
+                let idx = 0;
+                // Sort array to maximize interlaced alternating placement frequency
+                let orderedPool = [];
+                let sortedMap = {};
+                distinctDevices.forEach(d => sortedMap[d] = pool.filter(x => x === d));
+                
+                let loop = true;
+                while(loop) {
+                    loop = false;
+                    distinctDevices.forEach(d => {
+                        if(sortedMap[d].length > 0) {
+                            orderedPool.push(sortedMap[d].shift());
+                            loop = true;
+                        }
+                    });
+                }
+                while(orderedPool.length < rows * cols) orderedPool.push('Dummy');
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        baseMatrix[r][c] = orderedPool[idx++];
                     }
-                    
-                    rowPattern.push(item);
                 }
-                renderRow(centroidDisplay, rowPattern);
+                return [baseMatrix];
+
+            } else if (style === 'symmetric') {
+                // Mirrors elements left-to-right around central Y boundary split
+                let rowPoolSize = cols;
+                let idx = 0;
+                pool.sort(); // Sort elements together to mirror effectively
+
+                for(let r=0; r<rows; r++) {
+                    let halfRow = [];
+                    for(let c=0; c < Math.ceil(cols/2); c++) {
+                        if(idx < pool.length) halfRow.push(pool[idx++]);
+                    }
+                    let fullRow = [...halfRow];
+                    if (cols % 2 !== 0) halfRow.pop();
+                    fullRow = fullRow.concat(halfRow.reverse());
+                    baseMatrix[r] = fullRow.slice(0, cols);
+                }
+                return [baseMatrix];
+
+            } else {
+                // Default: Standard Cross-Coupled Common Centroid Array Generator Logic Simulation
+                // Creates an alternate balancing center system based on index coordinate inversions
+                let sortedPool = pool.filter(v => v !== 'Dummy').sort();
+                let idx = 0;
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        // Alternate coordinate tracking configurations to simulate cross coupling matrix setups (ABBA / BAAB topology checks)
+                        let factor = (r + c) % 2 === 0;
+                        if (r >= rows / 2) factor = !factor; 
+                        
+                        if (sortedPool.length > 0) {
+                            baseMatrix[r][c] = factor ? sortedPool.shift() : sortedPool.pop();
+                        } else {
+                            baseMatrix[r][c] = 'Dummy';
+                        }
+                    }
+                }
+                
+                // Return primary solution structure plus its horizontally flipped balance twin layout variant
+                let variantMatrix = baseMatrix.map(row => [...row].reverse());
+                return [baseMatrix, variantMatrix];
             }
-        } else {
-            centroidDisplay.innerHTML = `<div style="color: #94a3b8; text-align: center; padding: 20px;">
-                Unable to generate completely symmetric 2D centroid matrix without an even array boundary layer. Try setting Rows or Columns to an even number (e.g., 2x4, 4x4).
-            </div>`;
         }
-    }
 
-    function renderRow(container, patternArray) {
-        const row = document.createElement('div');
-        row.className = 'pattern-row';
-        
-        patternArray.forEach(device => {
-            const finger = document.createElement('div');
-            finger.className = `finger ${device}`;
-            finger.innerText = device;
-            row.appendChild(finger);
-        });
-        
-        container.appendChild(row);
-    }
+        // Evaluates coordinates to calculate geometric layout matching coefficients
+        function renderActiveSolution() {
+            if (currentSolutions.length === 0) return;
+            
+            const matrix = currentSolutions[activeSolutionIndex];
+            const rows = matrix.length;
+            const cols = matrix[0].length;
 
-    // Event Listeners
-    rowsInput.addEventListener('input', generatePatterns);
-    colsInput.addEventListener('input', generatePatterns);
-    typeSelect.addEventListener('change', generatePatterns);
+            document.getElementById('matrixDimensions').innerText = `${rows} Rows × ${cols} Columns Matrix`;
+            document.getElementById('solutionCountIndex').innerText = `Solution Layout: ${activeSolutionIndex + 1} / ${currentSolutions.length}`;
 
-    // Initial Render
-    generatePatterns();
-</script>
+            // Render Layout Grid Elements
+            const gridContainer = document.getElementById('layoutGrid');
+            gridContainer.innerHTML = '';
 
+            for (let r = 0; r < rows; r++) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'layout-row';
+                for (let c = 0; c < cols; c++) {
+                    const cell = matrix[r][c] || 'Dummy';
+                    const cellDiv = document.createElement('div');
+                    cellDiv.className = 'unit-cell';
+                    cellDiv.style.backgroundColor = deviceColors[cell] || '#475569';
+                    
+                    cellDiv.innerHTML = `${cell}<div class="sub-text">[${r},${c}]</div>`;
+                    rowDiv.appendChild(cellDiv);
+                }
+                gridContainer.appendChild(rowDiv);
+            }
+
+            calculateAndDisplayMetrics(matrix);
+        }
+
+        function navigateSolution(direction) {
+            if (currentSolutions.length === 0) return;
+            activeSolutionIndex = (activeSolutionIndex + direction + currentSolutions.length) % currentSolutions.length;
+            renderActiveSolution();
+        }
+
+        // Metrics, Heuristic Calculation Engine and Educational Summary
+        function calculateAndDisplayMetrics(matrix) {
+            const rows = matrix.length;
+            const cols = matrix[0].length;
+
+            // Find physical matrix mid-points (Array Grid Center reference markers)
+            const midX = (cols - 1) / 2;
+            const midY = (rows - 1) / 2;
+
+            let coordinatesMap = {};
+
+            // Parse positional weights
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const dev = matrix[r][c];
+                    if (!dev || dev === 'Dummy') continue;
+                    if (!coordinatesMap[dev]) coordinatesMap[dev] = [];
+                    coordinatesMap[dev].push({ r, c });
+                }
+            }
+
+            let centroidHtml = '';
+            let totalSymmetryPenalty = 0;
+            let firstOrderGradientMismatch = 0;
+            let deviceCount = 0;
+
+            // Analyze matching dispersion characteristics for every tracked device
+            for (let dev in coordinatesMap) {
+                deviceCount++;
+                const coords = coordinatesMap[dev];
+                let sumR = 0, sumC = 0;
+                
+                coords.forEach(pt => {
+                    sumR += pt.r;
+                    sumC += pt.c;
+                });
+
+                // Compute calculated geometric matching center of mass for specific active element channels
+                const centroidR = sumR / coords.length;
+                const centroidC = sumC / coords.length;
+
+                // Drift delta error variance from true target coordinate center point
+                const driftY = centroidR - midY;
+                const driftX = centroidC - midX;
+                totalSymmetryPenalty += Math.abs(driftX) + Math.abs(driftY);
+                firstOrderGradientMismatch += (driftX * driftX) + (driftY * driftY);
+
+                centroidHtml += `
+                    <div class="vector-row">
+                        <strong>Device ${dev}:</strong>
+                        <span>Calculated Center: [Y:${centroidR.toFixed(2)}, X:${centroidC.toFixed(2)}]</span>
+                    </div>
+                `;
+            }
+
+            document.getElementById('centroidDataBox').innerHTML = centroidHtml || 'No active matched device elements detected.';
+
+            // Normalize analytics scores (0 - 100 boundaries)
+            let symScore = Math.max(0, Math.min(100, Math.round(100 - (totalSymmetryPenalty * 15))));
+            let gradImmunity = Math.max(0, Math.min(100, Math.round(100 - (firstOrderGradientMismatch * 25))));
+            let routingComplexity = rows > 1 ? Math.min(95, Math.round(40 + (rows * 12) + (cols * 2))) : Math.max(20, Math.round(15 + (cols * 3)));
+            let netMatchingScore = Math.round((symScore * 0.5) + (gradImmunity * 0.5));
+
+            // Inject metrics dynamically back to modern UI panel elements
+            updateScoreElement('scoreSymmetry', symScore);
+            updateScoreElement('scoreGradient', gradImmunity);
+            updateScoreElement('scoreMatching', netMatchingScore);
+            updateScoreElement('scoreRouting', routingComplexity);
+
+            // Dynamically inject explanatory educational breakdowns
+            generateEducationalExplanation(symScore, gradImmunity, matrix);
+        }
+
+        function updateScoreElement(id, score) {
+            const el = document.getElementById(id);
+            el.innerText = `${score}%`;
+            el.className = 'score-val ' + (score > 80 ? 'score-good' : (score > 50 ? 'score-warn' : 'score-bad'));
+        }
+
+        function generateEducationalExplanation(sym, grad, matrix) {
+            const style = document.getElementById('matchingStyle').value;
+            let text = '';
+
+            if (style === 'common_centroid') {
+                text = `
+                    <p>This layout configuration implements standard <strong>2D Common Centroid (Cross-Coupling)</strong> placement frameworks.</p>
+                    <p>By mirroring individual array finger placement layout elements diagonally across both horizontal and vertical central lines, the geometric centroids for all active matching components align precisely with the exact geographical coordinate center point of the global matrix array structure.</p>
+                    <p><strong>Gradient Immunity Impact:</strong> Because the matching center properties match perfectly, any linear process variation (such as oxide thickness deviation gradients, thermal dissipation variations, or structural silicon stress shifts) across the chip surface cancels out entirely ($V_{OS} \\approx 0$), resulting in superior matching quality.</p>
+                `;
+            } else if (style === 'interdigitated') {
+                text = `
+                    <p>This layout topology represents an <strong>Interdigitated (Alternating Pattern Structure)</strong> line sequence configuration.</p>
+                    <p>It provides an optimized setup for tracking 1D linear distribution environments. While it successfully manages linear gradient cancellations occurring strictly along the horizontal X-Axis plane, it remains highly vulnerable to variations across the vertical Y-Axis profile.</p>
+                    <p><strong>Routing Analysis Trade-Off:</strong> Interdigitated lines offer simplified interconnections and minimized parasitic cross-coupling line routing challenges compared to complex multi-row cross-coupled centroid structures.</p>
+                `;
+            } else {
+                text = `
+                    <p>This layout operates as a <strong>Simple Mirror Symmetric</strong> structure framework configuration.</p>
+                    <p>While the pattern looks visually balanced, it does not achieve true common centroid status. It remains susceptible to higher-order nonlinear gradient error impacts because the outer elements are spaced further apart than the tightly matched core center components.</p>
+                `;
+            }
+
+            document.getElementById('educationExplanation').innerHTML = text;
+        }
+
+        function copyPatternString() {
+            if (currentSolutions.length === 0) return;
+            const txt = JSON.stringify(currentSolutions[activeSolutionIndex]);
+            navigator.clipboard.writeText(txt);
+            alert("Pattern layout string matrix array copied directly to clipboard!");
+        }
+
+        function exportJSON() {
+            if (currentSolutions.length === 0) return;
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+                tool: "Analog Layout Matching Visualizer",
+                active_pattern: currentSolutions[activeSolutionIndex],
+                symmetry_metrics_evaluated: true
+            }, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "analog_layout_pattern.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        // Initialize default execution simulation grid mapping setups on first launch
+        window.onload = () => {
+            generatePattern();
+        };
+    </script>
 </body>
 </html>

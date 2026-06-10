@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analog Layout Matching Playground</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="app-header">
+        <div class="logo-area">
+            <span class="icon">⚛️</span>
+            <h1>Analog Layout Matching Playground</h1>
+            <span class="badge">v1.0.0 Stable</span>
+        </div>
+        <div class="color-picker-group">
+            <label for="colorA">Device A Color:</label>
+            <input type="color" id="colorA" value="#3b82f6">
+            <label for="colorB">Device B Color:</label>
+            <input type="color" id="colorB" value="#f97316">
+        </div>
+    </header>
+
+    <nav class="mode-tabs">
+        <button class="tab-btn active" data-mode="visual">Mode 1: Visual Learning</button>
+        <button class="tab-btn" data-mode="analysis">Mode 2: Engineering Analysis</button>
+        <button class="tab-btn" data-mode="compare">Mode 3: Compare Patterns</button>
+        <button class="tab-btn" data-mode="animation">Mode 4: Gradient Animation</button>
+    </nav>
+
+    <main class="app-container">
+        
+        <section class="control-panel card">
+            <h2><span class="section-num">01</span> Configuration Console</h2>
+            <hr>
+            
+            <div class="control-group">
+                <h3>Device Ratios</h3>
+                <div class="input-row">
+                    <div class="input-field">
+                        <label for="numA">Number of A Devices</label>
+                        <input type="number" id="numA" value="4" min="1" max="16">
+                    </div>
+                    <div class="input-field">
+                        <label for="numB">Number of B Devices</label>
+                        <input type="number" id="numB" value="4" min="1" max="16">
+                    </div>
+                </div>
+                <button id="btnGenerate" class="btn-primary">Regenerate Matching Patterns</button>
+            </div>
+
+            <div class="control-group">
+                <h3>Environmental Gradient Simulator</h3>
+                <div class="input-field">
+                    <label for="gradientType">Gradient Type Source</label>
+                    <select id="gradientType">
+                        <option value="linear-thermal">Linear Thermal Gradient (ΔT)</option>
+                        <option value="process-oxide">Oxide Thickness Variation (ΔTox)</option>
+                        <option value="doping-wafer">Wafer Doping Concentration Gradient</option>
+                    </select>
+                </div>
+                <div class="input-field">
+                    <label for="gradientStrength">Gradient Mismatch Strength: <span id="gradientVal">50%</span></label>
+                    <input type="range" id="gradientStrength" min="0" max="100" value="50">
+                </div>
+            </div>
+
+            <div class="control-group custom-pattern-group">
+                <h3>Custom Matching Blueprint</h3>
+                <div class="input-field">
+                    <label for="customPatternInput">Enter Custom 1D Array (e.g., ABBAABBA)</label>
+                    <input type="text" id="customPatternInput" value="ABBAABBA" placeholder="Use uppercase A and B">
+                </div>
+                <button id="btnApplyCustom" class="btn-secondary">Evaluate Custom Pattern</button>
+            </div>
+
+            <div class="control-group">
+                <h3>Export &amp; Share Utilities</h3>
+                <div class="export-grid">
+                    <button class="btn-export" onclick="exportData('png')">🖼️ Download PNG</button>
+                    <button class="btn-export" onclick="exportData('svg')">📐 Download SVG</button>
+                    <button class="btn-export" onclick="exportData('copy')">📋 Copy Pattern</button>
+                    <button class="btn-export" onclick="exportData('url')">🔗 Share URL Link</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="display-panel">
+            
+            <div class="card context-card">
+                <h2 id="activeModeTitle">Visual Learning Lab Mode</h2>
+                <p id="activeModeDesc">Interact with dynamic configurations to inspect standard structures, topological mismatch, and device sequencing layouts.</p>
+            </div>
+
+            <div class="card canvas-card">
+                <div class="canvas-header">
+                    <h3>Silicon Core Transistor Placement Map</h3>
+                    <div class="gradient-legend">
+                        <span>Low Gradient</span>
+                        <div class="gradient-bar-indicator"></div>
+                        <span>High Gradient</span>
+                    </div>
+                </div>
+                
+                <div id="layoutSandbox" class="layout-sandbox"></div>
+
+                <div id="centroidTrack" class="centroid-track-container">
+                    <div class="centroid-line"></div>
+                    <div id="markerA" class="centroid-marker marker-a" title="Centroid Location of A">A</div>
+                    <div id="markerB" class="centroid-marker marker-b" title="Centroid Location of B">B</div>
+                </div>
+            </div>
+
+            <div class="telemetry-grid">
+                <div class="card metrics-card">
+                    <h4>Matching Metric Score</h4>
+                    <div class="score-display">
+                        <span id="scoreValue">--</span><span class="pct">/100</span>
+                    </div>
+                    <div id="scoreRating" class="rating-badge">Excellent</div>
+                </div>
+
+                <div class="card metrics-card">
+                    <h4>Geometric Spatial Analysis</h4>
+                    <div class="telemetry-row">
+                        <span>Center of Mass A ($X_A$):</span>
+                        <strong id="telemetryCentroidA">0.00</strong>
+                    </div>
+                    <div class="telemetry-row">
+                        <span>Center of Mass B ($X_B$):</span>
+                        <strong id="telemetryCentroidB">0.00</strong>
+                    </div>
+                    <div class="telemetry-row">
+                        <span>Spatial Offset Delta ($\Delta X$):</span>
+                        <strong id="telemetryDelta" class="highlight-text">0.00</strong>
+                    </div>
+                </div>
+
+                <div class="card metrics-card">
+                    <h4>Calculated Mismatch Error Vector</h4>
+                    <div class="telemetry-row">
+                        <span>Raw Induced Systemic Deviation:</span>
+                        <strong id="telemetryError">0.00%</strong>
+                    </div>
+                    <div class="telemetry-row">
+                        <span>Symmetry Balance Factor:</span>
+                        <strong id="telemetrySymmetry">Perfect</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card comparison-chart-card" id="comparisonChartSection">
+                <h3>Comparative Analysis Performance Chart</h3>
+                <p class="subtitle">Systemic Mismatch Variance plotted against Environmental Multiplier Sweep Gradient Strength</p>
+                <div class="chart-container">
+                    <svg id="performanceChart" viewBox="0 0 600 240"></svg>
+                </div>
+                <div class="chart-legend">
+                    <span class="legend-item"><span class="line-dot pattern-1"></span>AAAABBBB (Sequential Block)</span>
+                    <span class="legend-item"><span class="line-dot pattern-2"></span>ABABABAB (Standard Interdigitated)</span>
+                    <span class="legend-item"><span class="line-dot pattern-3"></span>ABBAABBA (Common Centroid Pair)</span>
+                    <span class="legend-item"><span class="line-dot pattern-4"></span>Selected Pattern Blueprint</span>
+                </div>
+            </div>
+
+            <div class="card educational-panel">
+                <button class="collapse-toggle" onclick="togglePanel('eduContent')">
+                    <span>🎓 Semiconductor Layout Lecture Insights Panel</span>
+                    <span id="toggleIcon">▼</span>
+                </button>
+                <div id="eduContent" class="collapse-content expanded">
+                    <div class="edu-grid">
+                        <div>
+                            <h5>Why Layout Regularity Matters</h5>
+                            <p>In analog layout automation, processing cross-axis gradients introduce physical mismatches in parameters like threshold voltage ($V_{th}$) and oxide capacitance ($C_{ox}$). Arranging devices systematically around a common geographic center allows cumulative linear error effects across the arrays to cancel out.</p>
+                        </div>
+                        <div>
+                            <h5>Analytical Comparison Principles</h5>
+                            <p>The sequential pattern <code>AAAABBBB</code> maximizes spatial drift separation, which degrades matching accuracy. The interdigitated design <code>ABABABAB</code> cancels out first-order spatial variations, while the balanced common centroid array <code>ABBAABBA</code> matches both coordinates ($X_A = X_B$), neutralizing linear mismatch effects.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+</body>
+</html>
